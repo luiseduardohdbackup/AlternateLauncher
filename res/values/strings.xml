@@ -1,0 +1,8 @@
+<resources>
+
+    <string name="app_name">Alternate Launcher</string>
+    <string name="title_activity_launcher">Launcher</string>
+    
+    <string name='action_info_changed'>com.an.alternatelauncher.INFO_CHANGED</string>
+
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+    <dimen name="gridview_padding">20dp</dimen>
+    
+    <dimen name="grid_length">90dp</dimen>
+    <dimen name="grid_spacing">5dp</dimen>
+    
+</resources>
