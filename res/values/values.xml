@@ -6,4 +6,6 @@
     <dimen name="grid_length">90dp</dimen>
     <dimen name="grid_spacing">5dp</dimen>
     
+    <item type="bool" name="os_14_plus">false</item>
+    
 </resources>

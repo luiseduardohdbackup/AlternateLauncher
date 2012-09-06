@@ -1,23 +1,17 @@
 package com.an.alternatelauncher.d;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.database.sqlite.SQLiteStatement;
-import android.text.TextUtils;
 
 import com.an.alternatelauncher.d.Scm.Activities;
 import com.an.alternatelauncher.d.Scm.Attributes;
 import com.an.alternatelauncher.d.Scm.View;
 import com.an.debug.Debug;
-
-// adb -s emulator-5554 shell
-// sqlite3 /data/data/*/databases/flashcard.sqlite
 
 public final class Dbh extends SQLiteOpenHelper {
 	
@@ -28,7 +22,6 @@ public final class Dbh extends SQLiteOpenHelper {
 	
 	public Dbh(Context context) {
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
-//		Debug.d(DATABASE_NAME, DATABASE_VERSION);
 	}
 
 	@Override public void onCreate(SQLiteDatabase db) {
@@ -48,7 +41,7 @@ public final class Dbh extends SQLiteOpenHelper {
 		long recordCount = 0;
 		
 		SQLiteDatabase db = getReadableDatabase();
-		Cursor c = db.rawQuery(Statement.SELECT_COUNT.s, null);
+		Cursor c = db.rawQuery(Statement.SELECT_VISIBLE_COUNT.s, null);
 		if(c.moveToFirst())
 			recordCount = c.getLong(0);
 		c.close();
@@ -66,7 +59,8 @@ public final class Dbh extends SQLiteOpenHelper {
 	}
 	
 	/**
-	 * Requires the query return PACKAGE, LABEL0, LABEL, SHOW
+	 * Requires the query return _ID PACKAGE LABEL0 LABEL SHOW
+	 * Activity name doesn't matter here
 	 * @param query
 	 * @return
 	 */
@@ -77,8 +71,8 @@ public final class Dbh extends SQLiteOpenHelper {
 		Cursor c = db.rawQuery(query, null);
 		if(c.moveToFirst()) {
 			while(!c.isAfterLast()) {
-				items.add(new LauncherInfo(c.getString(0), c.getString(1), c.getString(2)
-								,c.getInt(3)!=0));
+				items.add(new LauncherInfo(c.getInt(0), c.getString(1), "", c.getString(2)
+								, c.getString(3), c.getInt(4)!=0));
 				c.moveToNext();
 			}
 		}
@@ -86,84 +80,6 @@ public final class Dbh extends SQLiteOpenHelper {
 		db.close();
 		
 		return items;
-	}
-	
-	/**
-	 * Insert new (by ID) or update based on package name
-	 * @param items
-	 * @return
-	 */
-	public int updateInfos(List<LauncherInfo> items) {
-		
-		int added = 0;
-		
-		SQLiteDatabase db = getWritableDatabase();
-		
-		SQLiteStatement stmtInsertActivity = db.compileStatement(Statement.INSERT_ACTVITIY.s);
-		SQLiteStatement stmtInsertAttributes = db.compileStatement(Statement.INSERT_ATTRIBUTES.s);
-		SQLiteStatement stmtUpdate = db.compileStatement(Statement.UPDATE_ATTRIBUTES.s);
-		
-		Cursor c;
-		for(LauncherInfo item:items) {
-			// bindAllArgsAsStrings is only available in API 11
-			c = db.rawQuery(Statement.SELECT_PACKAGE.s, new String[]{item.packageName});
-			
-			db.beginTransaction();
-			
-			try {
-				
-				String label = TextUtils.isEmpty(item.label) ? item.label0 : item.label;
-				// Update
-				if(c.moveToFirst()) {
-					long id = c.getLong(0);
-					
-					stmtUpdate.bindString(1, label);
-					stmtUpdate.bindLong(2, item.show ? 1 : 0);
-					stmtUpdate.bindLong(3, id);
-					
-					if(stmtUpdate.executeInsert() > -1)
-						added++;
-					
-					Debug.d(DATABASE_NAME, "Updated", item);
-					
-				// Insert
-				} else {
-					
-					stmtInsertActivity.bindString(1, item.packageName);
-					stmtInsertActivity.bindString(2, item.label0);
-					
-					long id = stmtInsertActivity.executeInsert();
-					
-					stmtInsertAttributes.bindLong(1, id);
-					stmtInsertAttributes.bindString(2, label);
-					stmtInsertAttributes.bindLong(3, item.show ? 1 : 0);
-					
-					if(stmtInsertAttributes.executeInsert() > -1)
-						added++;
-					
-					Debug.d(DATABASE_NAME, "Inserted", item);
-					
-				}
-				
-				db.setTransactionSuccessful();
-				
-			} catch(Exception e) {
-				Debug.e(DATABASE_NAME, "error in update/insert", e);
-			} finally {
-				db.endTransaction();
-			}
-			
-			c.close();
-		}
-		
-		stmtInsertActivity.close();
-		stmtInsertAttributes.close();
-		stmtUpdate.close();
-		
-		db.close();
-		
-		return added;
-
 	}
 	
 	public void recreate() {
@@ -263,48 +179,37 @@ public final class Dbh extends SQLiteOpenHelper {
 				
 	}
 	
-	private enum Statement {
+	enum Statement {
 		
 		/** count */
-		SELECT_COUNT(String.format("select count(*) from %1$s", Activities.NAME))
+		SELECT_VISIBLE_COUNT(String.format("select count(*) from %1$s where %2$s<>0"
+						,View.ACTIVITIES_INFOS.NAME, Attributes.SHOW))
 		
-		/** _ID */
-		,SELECT_PACKAGE(String.format("select _id from %1$s where %2$s=?"
-						,Activities.NAME, Activities.PACKAGE))
-		
-		/** PACKAGE LABEL0 LABEL SHOW */
-		,SELECT_ENTRIES(String.format("select %1$s, %2$s, %3$s, %4$s from %5$s"
+		/** _ID PACKAGE LABEL0 LABEL SHOW */
+		,SELECT_ENTRIES(String.format("select %6$s, %1$s, %2$s, %3$s, %4$s from %5$s"
 				,Activities.PACKAGE, Activities.LABEL0, Attributes.LABEL, Attributes.SHOW
-				,View.ACTIVITIES_INFO.NAME
-				))
-						
-		/** PACKAGE LABEL0 LABEL SHOW */				
-		,SELECT_ENTRIES_FOR_DISPLAY(String.format("select %1$s, %2$s, %3$s, %4$s" +
-				" from %5$s where %4$s<>0"
-				,Activities.PACKAGE, Activities.LABEL0, Attributes.LABEL, Attributes.SHOW
-				,View.ACTIVITIES_INFO.NAME
+				,View.ACTIVITIES_INFOS.NAME, Activities._ID
 				))
 
-		/** PACKAGE LABEL0 */
-		,INSERT_ACTVITIY(String.format("insert into %1$s(%2$s,%3$s) values(?,?)"
-						,Activities.NAME, Activities.PACKAGE, Activities.LABEL0
+		/** _ID PACKAGE LABEL0 LABEL SHOW ACTIVITY_NAME */				
+		,SELECT_ENTRIES_FOR_DISPLAY(String.format("select %6$s, %1$s, %2$s, %3$s, %4$s, %7$s" +
+				" from %5$s where %4$s<>0 order by %6$s desc"
+				,Activities.PACKAGE, Activities.LABEL0, Attributes.LABEL, Attributes.SHOW
+				,View.ACTIVITIES_INFOS.NAME, Attributes.LAUNCH_COUNT, Activities.ACTIVITY
+				,Activities._ID
+				))
+
+		,INCREMENT_LAUNCH_COUNT(String.format(
+						"update %1$s set %2$s=%2$s+1 where %3$s=" +
+						"(select %4$s from %5$s where %6$s=?)"
+						,Scm.Attributes.NAME, Scm.Attributes.LAUNCH_COUNT
+						,Scm.Attributes.ACTIVITY_KEY, Scm.Activities._ID, Scm.Activities.NAME
+						,Scm.Activities.PACKAGE
 						))
-				
-		/** ACTIVITY_KEY LABEL SHOW */
-		,INSERT_ATTRIBUTES(String.format("insert into %1$s(%2$s,%3$s,%4$s) values(?,?,?)"
-						,Attributes.NAME, Attributes.ACTIVITY_KEY, Attributes.LABEL, Attributes.SHOW
-						))
-						
-		/** LABEL SHOW ACTIVITY_KEY */				
-		,UPDATE_ATTRIBUTES(String.format("update %1$s set %2$s=?,%3$s=? where %4$s=?"
-						,Attributes.NAME, Attributes.LABEL, Attributes.SHOW, Attributes.ACTIVITY_KEY
-						))
-						
 		;
 		
 		final String s;
 		Statement(String statement) { s = statement; }
-		@Override public String toString() {return s;}
 
 	}
 	

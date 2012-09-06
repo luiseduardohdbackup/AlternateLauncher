@@ -21,6 +21,7 @@ import com.an.alternatelauncher.d.LauncherInfo;
 
 
 final class SimpleAppAdapter extends BaseAdapter implements OnFocusChangeListener, OnClickListener {
+//	private static final String TAG = SimpleAppAdapter.class.getSimpleName();
 	
 	private final LayoutInflater mLi;
 	
@@ -67,8 +68,9 @@ final class SimpleAppAdapter extends BaseAdapter implements OnFocusChangeListene
 	}
 	
 	public void onFocusChange(View v, boolean hasFocus) {
+		
 		if(!hasFocus) {
-//			Debug.d(TAG, "Focus changed", hasFocus, v.getTag(R.id.position));
+
 			if(v.getTag(R.id.position) != null) {
 				synchronized (mAppEntries) {
 					int position = (Integer) v.getTag(R.id.position);
@@ -89,16 +91,25 @@ final class SimpleAppAdapter extends BaseAdapter implements OnFocusChangeListene
 	}
 	
 	public void onClick(View v) {
-		if(v instanceof CheckBox) {
-//			Debug.d(TAG, "Checked changed", ((CheckBox)v).isChecked(), v.getTag(R.id.position));
-			if(v.getTag(R.id.position) != null) {
-				boolean checked = ((CheckBox)v).isChecked();
-				synchronized (mAppEntries) {
-					AppEntry appEntry = mAppEntries.get((Integer) v.getTag(R.id.position));
-					appEntry.setShow(checked);
-					// No need to broadcast change since EditText already reflects it
-				}
+		
+		CheckBox checkbox = (CheckBox) (v instanceof CheckBox ? v
+						: ((View)v.getParent()).findViewById(R.id.checkbox));
+		
+//		Debug.d(TAG, "Checked changed", checkbox, checkbox.isChecked(), checkbox.getTag(R.id.position));
+		if(checkbox.getTag(R.id.position) != null) {
+			
+			// Must toggle checkbox if anything other than the checkbox was pressed
+			if(!(v instanceof CheckBox)) {
+				checkbox.setChecked(!checkbox.isChecked());
 			}
+			
+			boolean checked = checkbox.isChecked();
+			synchronized (mAppEntries) {
+				AppEntry appEntry = mAppEntries.get((Integer) checkbox.getTag(R.id.position));
+				appEntry.setShow(checked);
+				// No need to broadcast change since EditText already reflects it
+			}
+			
 		}
 	}
 
@@ -117,6 +128,7 @@ final class SimpleAppAdapter extends BaseAdapter implements OnFocusChangeListene
             
             holder.label.setOnFocusChangeListener(this);
             holder.checkbox.setOnClickListener(this);
+            holder.icon.setOnClickListener(this);
 
             convertView.setTag(holder);
         } else {

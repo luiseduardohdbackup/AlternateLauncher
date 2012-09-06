@@ -9,10 +9,12 @@ final class Scm {
 		private Activities(){};
 		static final String NAME = "activities";
 		
-		static final String LABEL0 = "lbl0";
+		static final String LABEL0 = "label0";
 		
 		// @reminder Check activity exists on launch to avoid launching uninstalled apps
-		static final String PACKAGE = "pckg";
+		static final String PACKAGE = "package";
+		
+		static final String ACTIVITY = "activity";
 		
 		/**
 		 * <ul>
@@ -24,10 +26,12 @@ final class Scm {
 						"(%2$s INTEGER PRIMARY KEY AUTOINCREMENT" +
 						",%3$s TEXT" +
 						",%4$s TEXT UNIQUE ON CONFLICT REPLACE" +
+						",%5$s TEXT" +
 						",CHECK(%3$s<>'')" +
 						",CHECK(%4$s<>'')" +
+						",CHECK(%5$s<>'')" +
 						");"
-						,NAME, _ID, LABEL0, PACKAGE
+						,NAME, _ID, LABEL0, PACKAGE, ACTIVITY
 						);
 	}
 	
@@ -37,11 +41,11 @@ final class Scm {
 		
 		static final String ACTIVITY_KEY = "a_key";
 		
-		static final String LABEL = "lbl";
+		static final String LABEL = "label";
 		
-		static final String SHOW = "shw";
+		static final String SHOW = "show";
 		
-		static final String LAUNCH_COUNT = "lnch_cnt";
+		static final String LAUNCH_COUNT = "launch_count";
 		
 		/**
 		 * <ul>
@@ -64,13 +68,13 @@ final class Scm {
 	
 	enum View {
 		
-		ACTIVITIES_INFO("visible_activities", String.format(
-						" select %1$s,%2$s,%3$s,%8$s,%9$s" +
+		ACTIVITIES_INFOS("visible_activities", String.format(
+						" select %1$s,%2$s,%3$s,%8$s,%9$s,%10$s,%6$s" +
 						" from %4$s ac inner join %5$s at on ac.%6$s=at.%7$s"
 						,Activities.PACKAGE, Activities.LABEL0, Attributes.LABEL
 						,Activities.NAME, Attributes.NAME, Activities._ID, Attributes.ACTIVITY_KEY
-						,Attributes.SHOW, Attributes.LAUNCH_COUNT)
-						)
+						,Attributes.SHOW, Attributes.LAUNCH_COUNT, Activities.ACTIVITY
+						))
 		;		
 		public final String CREATE;
 		public final String NAME;

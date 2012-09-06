@@ -3,10 +3,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <include layout="@layout/app_grid"/>
+    <include layout="@layout/app_grid" />
 
-    <TextView style="@style/no_apps"
+    <TextView
         android:id="@+id/empty_view"
-        />
+        style="@style/no_apps_widget" />
 
 </FrameLayout>

@@ -7,13 +7,14 @@ import java.util.List;
 import java.util.Map;
 
 import android.app.Activity;
-import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.database.ContentObserver;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
@@ -21,7 +22,6 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
-import android.support.v4.content.LocalBroadcastManager;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,6 +34,7 @@ import android.widget.GridView;
 import android.widget.TextView;
 
 import com.an.alternatelauncher.c.Page;
+import com.an.alternatelauncher.d.Api;
 import com.an.alternatelauncher.d.AppEntry;
 import com.an.alternatelauncher.d.Dbh;
 import com.an.alternatelauncher.d.LauncherInfo;
@@ -46,49 +47,39 @@ public class AppGridFragment extends Fragment implements LoaderCallbacks<List<Ap
 	
 	private List<AppEntry> mLauncherApps;
 	
-	private BroadcastReceiver mInfoChangedBr;
+	private ContentObserver mContentObserver;
 	
-	private void registerLocalReceivers() {
-		LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getActivity());
-		lbm.registerReceiver( mInfoChangedBr,
-				new IntentFilter(getString(R.string.action_info_changed)));
-	}
-	private void unregisterLocalReceivers() {
-		LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getActivity());
-		lbm.unregisterReceiver(mInfoChangedBr);
+	private class DataProviderObserver extends ContentObserver {
+
+	    public DataProviderObserver(Handler handler) {
+			super(handler);
+		}
+
+		@Override
+	    public void onChange(boolean selfChange) {
+	        getLoaderManager().restartLoader(0, null, AppGridFragment.this);
+	        if(mModelFrag != null)
+	        	mModelFrag.reload();
+	    }
 	}
 	
 	public static Fragment newInstance() {
-		Fragment fragment = new AppGridFragment();
-		
-		return fragment;
+		return new AppGridFragment();
 	}
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
-		mInfoChangedBr = new BroadcastReceiver() {
-			@Override
-			public void onReceive(Context context, Intent intent) {
-//				Debug.d(TAG, "info changed broadcast received in grid");
-				// @reminder Activty could be destroyed so check before proceeding
-				
-				if(getActivity() != null) {
-					if(mModelFrag != null) {
-						getLoaderManager().restartLoader(0, null, AppGridFragment.this);
-						mModelFrag.reload();
-					}
-				}
-				
-			}
-		};
+		mLauncherApps = new ArrayList<AppEntry>();
 	}
 	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.app_grid_layout, null);
-
+		
+		GridView grid = (GridView) view.findViewById(R.id.grid);
+		grid.setEmptyView(view.findViewById(R.id.empty_view));
+		
 		return view;
 	}
 	
@@ -99,8 +90,11 @@ public class AppGridFragment extends Fragment implements LoaderCallbacks<List<Ap
 		FragmentActivity activity = getActivity();
         
         FragmentManager fm = activity.getSupportFragmentManager();
+        
+        startObservingContent();
+        
+        // (Re)Attach the model frag 
 		mModelFrag = (ModelFrag) fm.findFragmentByTag(ModelFrag.FRAG_TAG);
-
 		if(mModelFrag == null) {
 			mModelFrag = new ModelFrag();
 			mModelFrag.setTargetFragment(this, getId());
@@ -116,50 +110,32 @@ public class AppGridFragment extends Fragment implements LoaderCallbacks<List<Ap
 		
 	}
 	
-	@Override
-	public void onStart() {
-		super.onStart();
-		registerLocalReceivers();
-	}
-	
-	@Override
-	public void onStop() {
-		super.onStop();
-		unregisterLocalReceivers();
-	}
-	
 	public Loader<List<AppEntry>> onCreateLoader(int arg0, Bundle arg1) {
-		return new AppListLoader(getActivity());
+		return new AppsLoader(getActivity());
 	}
 	
-
 	public void onLoadFinished(Loader<List<AppEntry>> loader, final List<AppEntry> list) {
 		
 //		Debug.d(TAG, "Load complete", list.size());
 		
-		new Thread(new Runnable() {
-			
-			public void run() {
-				
-				mLauncherApps = list;
-				
-				checkLoadState();
-				
-			}
-			
-		}).run();
+		synchronized (mLauncherApps) {
+			mLauncherApps = list;
+		}
 		
+		checkLoadState();
+				
 	}
 
 	public void onLoaderReset(Loader<List<AppEntry>> arg0) {
-//		Debug.d(TAG, "Loader reset");
+		mLauncherApps = new ArrayList<AppEntry>();
 	}
 	
 	public void pageIn(int fromDirection) {
+		
 		Activity activity = getActivity();
 		if(activity != null) {
 			
-			// Hide input
+			// Hide input since it is never required
 			new Handler().postDelayed(new Runnable() {
 				public void run() {
 					final InputMethodManager imm = (InputMethodManager) 
@@ -176,12 +152,10 @@ public class AppGridFragment extends Fragment implements LoaderCallbacks<List<Ap
 		
 		if(mLauncherApps != null && mModelFrag.mLoaded) {
 			
-			Debug.d(TAG, "Loading grid");
+//			Debug.d(TAG, "Loading grid");
 			
 			new Thread(new Runnable() {
 				public void run() {
-					
-					Activity activity = getActivity();
 					
 					Map<String,LauncherInfo> infos = mModelFrag.getInfoMap();
 					List<AppEntry> apps = new ArrayList<AppEntry>();
@@ -195,10 +169,16 @@ public class AppGridFragment extends Fragment implements LoaderCallbacks<List<Ap
 						}
 					}
 					
+					Collections.sort(apps);
+					
 					synchronized (mLauncherApps) {
 						mLauncherApps = apps;
 					}
 					
+					Debug.d(TAG, "adapter size", mLauncherApps.size(), "infos size", infos.size());
+					
+					// Renew the grid adapter completely since data has changed
+					final Activity activity = getActivity();
 					activity.runOnUiThread(new Runnable() {
 						public void run() {
 							GridView grid = (GridView) getView().findViewById(R.id.grid);
@@ -214,42 +194,55 @@ public class AppGridFragment extends Fragment implements LoaderCallbacks<List<Ap
 		}
 
 	}
+	
+	private void startObservingContent() {
+		if(mContentObserver == null) {
+			mContentObserver = new DataProviderObserver(null);
+			getActivity().getContentResolver().registerContentObserver(Api.CONTENT_URI, true
+							, mContentObserver);
+		}
+	}
 
 	private void modelLoaded() {
 		checkLoadState();
 	}
 	
-	/*
-	 * Save all labels and map to alternate name where original name is default
+	/**
+	 * Grid adapter
+	 *
 	 */
 	public class AppsAdapter extends BaseAdapter implements OnItemClickListener {
 		
+		public final Context context;
+		public final PackageManager packageManager;
+		
 		public final float DP;
+		public final int ICON_LENGTH;
 		
 		public AppsAdapter() {
+			context = getActivity();
+			packageManager = context.getPackageManager();
+			
 			DP = getResources().getDisplayMetrics().density;
+			ICON_LENGTH = (int) (Constants.DP_ICON_LENGTH * DP + 0.5f);
 		}
 		
 		public View getView(int position, View convertView, ViewGroup parent) {
-			
-			Activity activity = getActivity();
-			PackageManager pm = activity.getPackageManager();
 			
 //			final TypedArray a = activity.obtainStyledAttributes(
 //			                null, R.styleable.Keyboard, 0, R.style.app_icon_textview);
 			
 			// TODO Load styles from xml, set height from styles
-			TextView textView = new TextView(activity);
+			TextView textView = new TextView(context);
 			textView.setGravity(Gravity.CENTER_HORIZONTAL);
-			textView.setMinHeight((int)(90*DP));
+			textView.setMinHeight(getResources().getDimensionPixelSize(R.dimen.grid_length));
 			
 			AppEntry entry = mLauncherApps.get(position);
 			
 //			Debug.d(TAG, info.loadLabel(pm), info.activityInfo.hashCode());
 			
-			Drawable icon = entry.resolveInfo.activityInfo.loadIcon(pm);
-			final int w = (int) (48 * getResources().getDisplayMetrics().density + 0.5f);
-			icon.setBounds(new Rect(0, 0, w, w));
+			Drawable icon = entry.resolveInfo.activityInfo.loadIcon(packageManager);
+			icon.setBounds(new Rect(0, 0, ICON_LENGTH, ICON_LENGTH));
 			
 			textView.setCompoundDrawables(null, icon, null, null);
 			textView.setText(entry.getLabel());
@@ -272,19 +265,26 @@ public class AppGridFragment extends Fragment implements LoaderCallbacks<List<Ap
 			return position;
 		}
 		
-		// @todo Record launch in db
 		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 //			Debug.d(TAG, parent, view, position, id, view.getTag());
-			if(view.getTag() != null)
+			if(view.getTag() != null) {
+				String packageName = (String) view.getTag();
 				startActivity(getActivity().getPackageManager().getLaunchIntentForPackage(
-								(String) view.getTag()));
+								packageName));
+				
+				// Update launch count
+				ContentResolver cr = context.getContentResolver();
+				ContentValues values = new ContentValues();
+				values.put(Api.Columns.PACKAGE, packageName);
+				cr.update(Api.CONTENT_URI, values, null, null);
+			}
 			
 		}
 	}
 	
 	public static final class ModelFrag extends Fragment {
 		private static final String FRAG_TAG = 
-				AppGridFragment.class.getSimpleName() + "." + ModelFrag.class.getSimpleName();
+				ModelFrag.class.getSimpleName() + "." + AppGridFragment.class.getSimpleName();
 		
 		private List<LauncherInfo> mLis;
 		private volatile boolean mLoaded;
@@ -307,32 +307,15 @@ public class AppGridFragment extends Fragment implements LoaderCallbacks<List<Ap
 	    
 	    void reload() {
 	    	mLoaded = false;
-	    	new LoadThread().start();
+	    	new LoadTask().execute();
 	    }
 	    
-	    private void loaded() {
-	    	mLoaded = true;
-	    	Activity activity = getActivity();
-	    	if(activity != null) {
-	    		synchronized (activity) {
-	    	    	final Fragment fragment = getTargetFragment();
-	    	    	if(fragment != null) {
-	    	    		activity.runOnUiThread(new Runnable() {
-	    					public void run() {
-	    						((AppGridFragment)fragment).modelLoaded();
-	    					}
-	    				});
-	    	    	}
-				}
-	    	}
-	    	Debug.d(FRAG_TAG, "loaded/reloaded");
-	    }
-	    
-	    private final class LoadThread extends Thread {
-	        @Override
-	        public void run() {
-	        	
-	        	List<LauncherInfo> lis = new ArrayList<LauncherInfo>();
+	    private final class LoadTask extends AsyncTask<Void, Void, List<LauncherInfo>>{
+	        
+	    	@Override
+	    	protected List<LauncherInfo> doInBackground(Void... params) {
+	    		
+	    		List<LauncherInfo> lis = new ArrayList<LauncherInfo>();
 	        	
 	        	Activity activity = getActivity();
 	        	if(activity != null) {
@@ -341,27 +324,35 @@ public class AppGridFragment extends Fragment implements LoaderCallbacks<List<Ap
 	        		dbh.close();
 				}
 	        	
-	        	if(lis != null && lis.size() > 0) {
-		        	
-//		        	Debug.d(FRAG_TAG, "Loaded", lis.size());
-		        	
-	        		synchronized(mLis) {
-	        			mLis = lis;
-		        	}
-		        	
+	        	return lis;
+	        	
+	    	}
+	    	
+	    	@Override
+	    	protected void onPostExecute(List<LauncherInfo> result) {
+	    		
+        		synchronized(mLis) {
+        			mLis = result;
 	        	}
 	        	
-        		loaded();
-	        	
-	        }
+		    	mLoaded = true;
+		    	Activity activity = getActivity();
+		    	if(activity != null) {
+	    	    	final Fragment fragment = getTargetFragment();
+	    	    	if(fragment != null) {
+						((AppGridFragment)fragment).modelLoaded();
+	    	    	}
+		    	}
+
+	    	}
+		    
 	    };
 
 	    @Override
 	    public void onCreate(Bundle savedInstanceState) {
 	        super.onCreate(savedInstanceState);
 	        setRetainInstance(true);
-	        new LoadThread().start();
-//	        Debug.d(FRAG_TAG, "Model frag created", this);
+	        new LoadTask().execute();
 	    }
 	    
 	}

@@ -9,5 +9,21 @@
         <item name="android:minHeight">@dimen/grid_length</item>
         <item name="android:padding">4dp</item>
     </style>
+    
+    <!-- Use as base for grid layout and widget layout where widget has icon also -->
+    <style name='no_apps' parent="@android:style/TextAppearance.DeviceDefault.Medium">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:gravity">center</item>
+        <item name="android:text">@string/no_apps</item>
+        <item name="android:visibility">gone</item>
+    </style>
+    
+    <style name="no_apps_widget" parent="no_apps">
+        <item name="android:drawableTop">@drawable/ic_launcher</item>
+        <item name="android:layout_width">@dimen/grid_length</item>
+        <item name="android:layout_height">@dimen/grid_length</item>
+        <item name="android:layout_gravity">center</item>
+    </style>
 
 </resources>

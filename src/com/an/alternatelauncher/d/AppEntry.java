@@ -8,20 +8,39 @@ import android.text.TextUtils;
 import com.an.debug.Debug;
 
 public class AppEntry implements Comparable<AppEntry> {
-	
+
+    private final PackageManager packageManager;
+    public final ResolveInfo resolveInfo;
+    public final String packageName;
+    public final String activityName;
+    public final String label0;
+    
+    private String mLabel;
+    private Drawable mIcon;
+    private boolean mShow;
+    
     public AppEntry(PackageManager packageManager, ResolveInfo info) {
-        pm = packageManager;
+        this.packageManager = packageManager;
         resolveInfo = info;
         packageName = info.activityInfo.packageName;
-    	label0 = info.loadLabel(pm).toString();
+        activityName = info.activityInfo.name;
+    	label0 = info.loadLabel(packageManager).toString();
+    	
         mLabel = label0;
         mShow = true;
+        
+        // @debug
+//        mShow = false;
     }
 
     public ResolveInfo getApplicationInfo() {
         return resolveInfo;
     }
     
+    /**
+     * Will default to the original label if {@code label} is empty
+     * @param label
+     */
     public void setLabel(CharSequence label) {
     	mLabel = TextUtils.isEmpty(label) ? label0 : label.toString();
     }
@@ -32,7 +51,7 @@ public class AppEntry implements Comparable<AppEntry> {
     
     public Drawable getIcon() {
         if(mIcon == null)
-        	mIcon = resolveInfo.loadIcon(pm);
+        	mIcon = resolveInfo.loadIcon(packageManager);
         return mIcon;
     }
     
@@ -54,13 +73,4 @@ public class AppEntry implements Comparable<AppEntry> {
     									: mLabel.compareTo(another.mLabel);
     }
 
-    private final PackageManager pm;
-    public final ResolveInfo resolveInfo;
-    public final String packageName;
-    public final String label0;
-    
-    private String mLabel;
-    private Drawable mIcon;
-    private boolean mShow;
-    
 }

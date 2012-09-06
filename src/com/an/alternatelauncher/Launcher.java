@@ -84,8 +84,6 @@ public class Launcher extends FragmentActivity {
 		
         private void pageTransition(int oldPage, int newPage) {
         	
-//        	Debug.d(TAG, "Transition from", oldPage, "to", newPage);
-//        	
         	Page pageOld = mPageFragments.get(oldPage);
         	Page pageNew = mPageFragments.get(newPage);
         	

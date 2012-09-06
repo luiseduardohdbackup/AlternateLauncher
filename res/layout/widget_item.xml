@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+	110dp is used because it looks best on the N7
+	ImageView is added because compound drawable can't be set for remote view except by resource id 
+ -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/launcher_item"
+    android:layout_width="110dp"
+    android:layout_height="110dp"
+    android:orientation="vertical"
+    android:gravity="center"
+    >
+    
+    <ImageView
+        android:id="@+id/icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        />
+    
+	<TextView
+	    android:id="@+id/label"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:gravity="center_horizontal"
+	    />
+	    
+</LinearLayout>

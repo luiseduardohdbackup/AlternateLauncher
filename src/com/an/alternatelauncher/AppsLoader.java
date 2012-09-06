@@ -16,7 +16,7 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.support.v4.content.AsyncTaskLoader;
 
-public class AppListLoader extends AsyncTaskLoader<List<AppEntry>> {
+public class AppsLoader extends AsyncTaskLoader<List<AppEntry>> {
 	
     private final InterestingConfigChanges mLastConfig = new InterestingConfigChanges();
     private final PackageManager mPm;
@@ -34,21 +34,22 @@ public class AppListLoader extends AsyncTaskLoader<List<AppEntry>> {
     List<AppEntry> mApps;
     PackageIntentReceiver mPackageObserver;
 
-    public AppListLoader(Context context) {
+    public AppsLoader(Context context) {
         super(context);
 
-        // Retrieve the package manager for later use; note we don't
-        // use 'context' directly but instead the save global application
-        // context returned by getContext().
+        /*
+         * Retrieve the package manager for later use; note we don't use 'context' directly but
+         * instead the save global application context returned by getContext() 
+         */ 
         mPm = getContext().getPackageManager();
     }
 
     /**
-     * This is where the bulk of our work is done.  This function is
-     * called in a background thread and should generate a new set of
-     * data to be published by the loader.
+     * This is where the bulk of our work is done.  This function is called in a background thread 
+     * and should generate a new set of data to be published by the loader.
      */
-    @Override public List<AppEntry> loadInBackground() {
+    @Override 
+    public List<AppEntry> loadInBackground() {
     	
     	Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
         mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
@@ -200,9 +201,9 @@ public class AppListLoader extends AsyncTaskLoader<List<AppEntry>> {
 	 * so that the loader can be updated.
 	 */
 	public static class PackageIntentReceiver extends BroadcastReceiver {
-	    final AppListLoader mLoader;
+	    final AppsLoader mLoader;
 	
-	    public PackageIntentReceiver(AppListLoader loader) {
+	    public PackageIntentReceiver(AppsLoader loader) {
 	        mLoader = loader;
 	        IntentFilter filter = new IntentFilter(Intent.ACTION_PACKAGE_ADDED);
 	        filter.addAction(Intent.ACTION_PACKAGE_REMOVED);

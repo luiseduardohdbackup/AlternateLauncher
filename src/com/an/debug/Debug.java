@@ -7,7 +7,6 @@ import android.util.Log;
 
 /**
  * Debug helper class
- * Link to this but copy the setting class
  * @author Qui
  *
  */

@@ -1,0 +1,77 @@
+android.support.v4.app.BackStackState
+android.support.v4.app.BackStackState: android.os.Parcelable$Creator CREATOR
+android.support.v4.app.Fragment$SavedState
+android.support.v4.app.Fragment$SavedState: android.os.Parcelable$Creator CREATOR
+android.support.v4.app.FragmentActivity: FragmentActivity()
+android.support.v4.app.FragmentManagerState
+android.support.v4.app.FragmentManagerState: android.os.Parcelable$Creator CREATOR
+android.support.v4.app.FragmentState
+android.support.v4.app.FragmentState: android.os.Parcelable$Creator CREATOR
+android.support.v4.content.ModernAsyncTask$Status: android.support.v4.content.ModernAsyncTask$Status[] values()
+android.support.v4.content.ModernAsyncTask$Status: android.support.v4.content.ModernAsyncTask$Status valueOf(java.lang.String)
+android.support.v4.view.PagerTabStrip: void setTabIndicatorColor(int)
+android.support.v4.view.PagerTabStrip: void setTabIndicatorColorResource(int)
+android.support.v4.view.PagerTabStrip: int getTabIndicatorColor()
+android.support.v4.view.PagerTabStrip: void setTextSpacing(int)
+android.support.v4.view.PagerTabStrip: void setBackgroundDrawable(android.graphics.drawable.Drawable)
+android.support.v4.view.PagerTabStrip: void setBackgroundColor(int)
+android.support.v4.view.PagerTabStrip: void setBackgroundResource(int)
+android.support.v4.view.PagerTabStrip: void setDrawFullUnderline(boolean)
+android.support.v4.view.PagerTabStrip: boolean getDrawFullUnderline()
+android.support.v4.view.PagerTabStrip: int getMinHeight()
+android.support.v4.view.PagerTitleStrip: void setSingleLineAllCaps(android.widget.TextView)
+android.support.v4.view.PagerTitleStrip: void setTextSpacing(int)
+android.support.v4.view.PagerTitleStrip: int getTextSpacing()
+android.support.v4.view.PagerTitleStrip: void setNonPrimaryAlpha(float)
+android.support.v4.view.PagerTitleStrip: void setTextColor(int)
+android.support.v4.view.PagerTitleStrip: void setGravity(int)
+android.support.v4.view.PagerTitleStrip: int getMinHeight()
+android.support.v4.view.ViewPager
+android.support.v4.view.ViewPager: ViewPager(android.content.Context)
+android.support.v4.view.ViewPager: ViewPager(android.content.Context,android.util.AttributeSet)
+android.support.v4.view.ViewPager: void setScrollState(int)
+android.support.v4.view.ViewPager: void setAdapter(android.support.v4.view.PagerAdapter)
+android.support.v4.view.ViewPager: android.support.v4.view.PagerAdapter getAdapter()
+android.support.v4.view.ViewPager: void setOnAdapterChangeListener(android.support.v4.view.ViewPager$OnAdapterChangeListener)
+android.support.v4.view.ViewPager: void setCurrentItem(int)
+android.support.v4.view.ViewPager: int getCurrentItem()
+android.support.v4.view.ViewPager: void setOnPageChangeListener(android.support.v4.view.ViewPager$OnPageChangeListener)
+android.support.v4.view.ViewPager: int getOffscreenPageLimit()
+android.support.v4.view.ViewPager: void setOffscreenPageLimit(int)
+android.support.v4.view.ViewPager: void setPageMargin(int)
+android.support.v4.view.ViewPager: int getPageMargin()
+android.support.v4.view.ViewPager: void setPageMarginDrawable(android.graphics.drawable.Drawable)
+android.support.v4.view.ViewPager: void setPageMarginDrawable(int)
+android.support.v4.view.ViewPager: void setScrollingCacheEnabled(boolean)
+android.support.v4.view.ViewPager$SavedState
+android.support.v4.view.ViewPager$SavedState: android.os.Parcelable$Creator CREATOR
+com.an.alternatelauncher.Launcher
+com.an.alternatelauncher.Launcher: Launcher()
+com.an.alternatelauncher.R$anim: int fade
+com.an.alternatelauncher.R$anim: int layout_grid_intro
+com.an.alternatelauncher.R$anim: int rotate_x
+com.an.alternatelauncher.R$dimen: int grid_length
+com.an.alternatelauncher.R$dimen: int grid_spacing
+com.an.alternatelauncher.R$dimen: int gridview_padding
+com.an.alternatelauncher.R$drawable: int ic_launcher
+com.an.alternatelauncher.R$id: int checkbox
+com.an.alternatelauncher.R$id: int grid
+com.an.alternatelauncher.R$id: int icon
+com.an.alternatelauncher.R$id: int label
+com.an.alternatelauncher.R$id: int pager
+com.an.alternatelauncher.R$id: int position
+com.an.alternatelauncher.R$layout: int app_grid_layout
+com.an.alternatelauncher.R$layout: int app_list_item
+com.an.alternatelauncher.R$layout: int launcher
+com.an.alternatelauncher.R$string: int action_info_changed
+com.an.alternatelauncher.R$string: int app_name
+com.an.alternatelauncher.R$string: int title_activity_launcher
+com.an.alternatelauncher.R$style: int AppTheme
+com.an.alternatelauncher.R$style: int app_icon_textview
+com.an.alternatelauncher.R$xml: int appwidget_info
+com.an.alternatelauncher.d.Dbh$Statement: com.an.alternatelauncher.d.Dbh$Statement[] values()
+com.an.alternatelauncher.d.Dbh$Statement: com.an.alternatelauncher.d.Dbh$Statement valueOf(java.lang.String)
+com.an.alternatelauncher.d.Scm$Triggers: com.an.alternatelauncher.d.Scm$Triggers[] values()
+com.an.alternatelauncher.d.Scm$Triggers: com.an.alternatelauncher.d.Scm$Triggers valueOf(java.lang.String)
+com.an.alternatelauncher.d.Scm$View: com.an.alternatelauncher.d.Scm$View[] values()
+com.an.alternatelauncher.d.Scm$View: com.an.alternatelauncher.d.Scm$View valueOf(java.lang.String)

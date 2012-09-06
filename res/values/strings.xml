@@ -4,5 +4,8 @@
     <string name="title_activity_launcher">Launcher</string>
     
     <string name='action_info_changed'>com.an.alternatelauncher.INFO_CHANGED</string>
+    
+    <string name="loading">Loading&#8320;</string>
+    <string name="no_apps">No apps</string>
 
 </resources>

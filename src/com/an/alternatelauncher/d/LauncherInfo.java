@@ -4,28 +4,42 @@ import com.an.debug.Debug;
 
 public class LauncherInfo implements Comparable<LauncherInfo> {
 
+	public final int id;
 	public final String packageName;
+	public final String activityName;
 	public final String label0;
 	public final String label;
 	public final boolean show;
 	
-	public LauncherInfo(LauncherInfo item) {
-		this(item.packageName, item.label0, item.label, item.show);
-	}
 	public LauncherInfo(AppEntry entry) {
-		this(entry.packageName, entry.label0, entry.getLabel(), entry.getShow());
+		this(entry.packageName, entry.activityName, entry.label0, entry.getLabel(), entry.getShow());
 	}
-	public LauncherInfo(String packageName, String label0, String label, boolean show) {
+	public LauncherInfo(String packageName, String activityName, String label0, String label
+					, boolean show) {
+		this(-1, packageName, activityName, label0, label, show);
+	}
+	public LauncherInfo(LauncherInfo item) {
+		this(item.id, item.packageName, item.activityName, item.label0, item.label, item.show);
+	}
+	public LauncherInfo(int id, String packageName, String activityName, String label0, String label
+					, boolean show) {
+		this.id = id;
 		this.packageName = packageName;
+		this.activityName = activityName;
 		this.label0 = label0;
 		this.label = label;
 		this.show = show;
 	}
 	
+	public boolean isNew() { return id == -1; }
+	
+	/**
+	 * Sorts by {@code show} then by label
+	 */
 	public int compareTo(LauncherInfo another) {
 		return this.show && !another.show ? -1 
 						: another.show && !this.show ? 1
-										: label0.compareTo(another.label0);
+										: label.compareTo(another.label);
 	}
 	
 	/**
@@ -62,7 +76,8 @@ public class LauncherInfo implements Comparable<LauncherInfo> {
 	
 	@Override
 	public String toString() {
-		return String.format("%1$s %2$s %3$s %4$s", packageName, label0, label, Debug.toYesNoString(show));
+		return String.format("%5$d %1$s %2$s %3$s %4$s", packageName, label0, label
+						, Debug.toYesNoString(show), id);
 	}
 	
 }
